@@ -114,6 +114,7 @@ look into implementing Lua
 
 #include "core.h"
 #include "EntityAdmin.h"
+#include "core/commands.h"
 
 Console* g_console;
 
@@ -148,6 +149,12 @@ struct DeshiEngine {
 		entityAdmin.Init(&input, &window, &time, &renderer, &console);
 		
 		LOG("Finished deshi initialization in ",TIMER_END(t_d),"ms");
+		
+		//testing playground
+		{
+			InitCommands();
+			RunCommand("qut yooooooo");
+		}
 		
 		//start main loop
 		while (!glfwWindowShouldClose(window.window) && !window.closeWindow) {

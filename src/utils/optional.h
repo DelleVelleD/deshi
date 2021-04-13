@@ -5,6 +5,7 @@
 template <typename T>
 struct Optional {
 	T value;
+	
 	Optional() {
 		memset(&value, 0xFFFFFFFF, sizeof(T));
 	};
