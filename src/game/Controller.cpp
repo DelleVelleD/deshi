@@ -625,6 +625,8 @@ void Controller::Init(EntityAdmin* a, MovementMode m){
 }
 
 void Controller::Update() {
+	ZoneScoped;
+
 	if (DengInput->KeyPressed(DengKeys.toggleConsole)) DengConsole->dispcon = !DengConsole->dispcon;
 	
 	if (!DengConsole->IMGUI_KEY_CAPTURE) {

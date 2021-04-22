@@ -94,6 +94,8 @@ void deshiImGui::Cleanup(){
 }
 
 void deshiImGui::NewFrame(){
+	ZoneScoped;
+
 	// Start the Dear ImGui frame
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();

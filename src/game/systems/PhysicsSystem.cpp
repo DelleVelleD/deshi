@@ -20,7 +20,7 @@ struct PhysicsTuple {
 //// integration ////
 /////////////////////
 
-inline std::vector<PhysicsTuple> GetPhysicsTuples(EntityAdmin* admin) {
+std::vector<PhysicsTuple> GetPhysicsTuples(EntityAdmin* admin) {
 	std::vector<PhysicsTuple> out;
 	for(auto& e : admin->entities) {
 		Transform* transform = &e.transform;
@@ -41,6 +41,8 @@ inline std::vector<PhysicsTuple> GetPhysicsTuples(EntityAdmin* admin) {
 //TODO(delle,Ph) look into bettering this physics tick
 //https://gafferongames.com/post/physics_in_3d/
 inline void PhysicsTick(PhysicsTuple& t, PhysicsSystem* ps, Time* time) {
+	ZoneScoped;
+
 	//// translation ////
 	
 	//add input forces
@@ -126,6 +128,8 @@ Matrix4 LocalToWorldInertiaTensor(Physics* physics, Matrix3 inertiaTensor) {
 }
 
 inline void AABBAABBCollision(Physics* obj1, AABBCollider* obj1Col, Physics* obj2, AABBCollider* obj2Col) {
+	ZoneScoped;
+	
 	//calculate min and max values over each axis
 	vec3 max1 = obj1->position + obj1Col->halfDims;
 	vec3 min1 = obj1->position - obj1Col->halfDims;
@@ -181,6 +185,8 @@ inline void AABBAABBCollision(Physics* obj1, AABBCollider* obj1Col, Physics* obj
 }
 
 inline void AABBSphereCollision(Physics* aabb, AABBCollider* aabbCol, Physics* sphere, SphereCollider* sphereCol) {
+	ZoneScoped;
+	
 	Vector3 aabbPoint = Geometry::ClosestPointOnAABB(aabb->position, aabbCol->halfDims, sphere->position);
 	Vector3 vectorBetween = aabbPoint - sphere->position; //sphere towards aabb
 	float distanceBetween = vectorBetween.mag();
@@ -238,6 +244,8 @@ inline void AABBBoxCollision(Physics* aabb, AABBCollider* aabbCol, Physics* box,
 }
 
 inline void SphereSphereCollision(Physics* s1, SphereCollider* sc1, Physics* s2, SphereCollider* sc2) {
+	ZoneScoped;
+
 	//static resolution
 	float dist = (s1->position - s2->position).mag();
 	float rsum = sc1->radius + sc2->radius;
@@ -279,32 +287,43 @@ inline void BoxBoxCollision(Physics* box, BoxCollider* boxCol, Physics* other, B
 //NOTE make sure you are using the right physics component, because the collision 
 //functions dont check that the provided one matches the tuple
 inline void CheckCollision(PhysicsTuple& tuple, PhysicsTuple& other) {
+	ZoneScoped;
+
 	switch(tuple.collider->type){
 		case(ColliderType_Box):
 		switch(other.collider->type){
-			case(ColliderType_Box):   { BoxBoxCollision   (tuple.physics, (BoxCollider*)   tuple.collider, 
-														   other.physics, (BoxCollider*)   other.collider); }break;
-			case(ColliderType_Sphere):{ SphereBoxCollision(other.physics, (SphereCollider*)other.collider, 
-														   tuple.physics, (BoxCollider*)   tuple.collider); }break;
-			case(ColliderType_AABB):  { AABBBoxCollision  (other.physics, (AABBCollider*)  other.collider, 
-														   tuple.physics, (BoxCollider*)   tuple.collider); }break;
+		case(ColliderType_Box): {
+			ZoneName("Box v Box", sizeof("Box v Box")); BoxBoxCollision(tuple.physics, (BoxCollider*)tuple.collider,
+				other.physics, (BoxCollider*)other.collider); }break;
+		case(ColliderType_Sphere): {
+			ZoneName("Box v Sphere", sizeof("Box v Sphere")); SphereBoxCollision(other.physics, (SphereCollider*)other.collider,
+				tuple.physics, (BoxCollider*)tuple.collider); }break;
+		case(ColliderType_AABB): {
+			ZoneName("Box v AABB", sizeof("Box v AABB")); AABBBoxCollision(other.physics, (AABBCollider*)other.collider,
+				tuple.physics, (BoxCollider*)tuple.collider); }break;
 		}break;
 		case(ColliderType_Sphere):
-		switch(other.collider->type){
-			case(ColliderType_Box):   { SphereBoxCollision   (tuple.physics, (SphereCollider*)tuple.collider, 
-															  other.physics, (BoxCollider*)   other.collider); }break;
-			case(ColliderType_Sphere):{ SphereSphereCollision(tuple.physics, (SphereCollider*)tuple.collider, 
-															  other.physics, (SphereCollider*)other.collider); }break;
-			case(ColliderType_AABB):  { AABBSphereCollision  (other.physics, (AABBCollider*)  other.collider, 
-															  tuple.physics, (SphereCollider*)tuple.collider); }break;
-		}break;
+			switch (other.collider->type) {
+			case(ColliderType_Box): {
+				ZoneName("Sphere v Box", sizeof("Sphere v Box")); SphereBoxCollision(tuple.physics, (SphereCollider*)tuple.collider,
+					other.physics, (BoxCollider*)other.collider); }break;
+			case(ColliderType_Sphere): {
+				ZoneName("Sphere v Sphere", sizeof("Sphere v Sphere")); SphereSphereCollision(tuple.physics, (SphereCollider*)tuple.collider,
+					other.physics, (SphereCollider*)other.collider); }break;
+			case(ColliderType_AABB): {
+				ZoneName("Sphere v AABB", sizeof("Sphere v AABB")); AABBSphereCollision(other.physics, (AABBCollider*)other.collider,
+					tuple.physics, (SphereCollider*)tuple.collider); }break;
+			}break;
 		case(ColliderType_AABB):
-		switch(other.collider->type){
-			case(ColliderType_Box):   { AABBBoxCollision   (tuple.physics, (AABBCollider*)  tuple.collider, 
-															other.physics, (BoxCollider*)   other.collider); }break;
-			case(ColliderType_Sphere):{ AABBSphereCollision(tuple.physics, (AABBCollider*)  tuple.collider, 
-															other.physics, (SphereCollider*)other.collider); }break;
-			case(ColliderType_AABB):  { AABBAABBCollision  (tuple.physics, (AABBCollider*)  tuple.collider, 
+			switch (other.collider->type) {
+			case(ColliderType_Box): {
+				ZoneName("AABB v Box", sizeof("AABB v Box")); AABBBoxCollision(tuple.physics, (AABBCollider*)tuple.collider,
+					other.physics, (BoxCollider*)other.collider); }break;
+			case(ColliderType_Sphere): {
+				ZoneName("AABB v Sphere", sizeof("AABB v Sphere")); AABBSphereCollision(tuple.physics, (AABBCollider*)tuple.collider,
+					other.physics, (SphereCollider*)other.collider); }break;
+			case(ColliderType_AABB): {
+				ZoneName("AABB v AABB", sizeof("AABB v AABB")); AABBAABBCollision  (tuple.physics, (AABBCollider*)  tuple.collider,
 															other.physics, (AABBCollider*)  other.collider); }break;
 		}break;
 	}
@@ -325,6 +344,8 @@ inline void CollisionTick(std::vector<PhysicsTuple>& tuples, PhysicsTuple& t){
 //////////////////////////
 
 void PhysicsSystem::Update() {
+	ZoneScoped;
+
 	std::vector<PhysicsTuple> tuples = GetPhysicsTuples(admin);
 	
 	//update physics extra times per frame if frame time delta is larger than physics time delta

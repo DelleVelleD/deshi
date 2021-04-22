@@ -133,7 +133,7 @@ void AddPadding(float x){
 //// major ui elements ////
 
 void CanvasSystem::MenuBar() {
-	
+	ZoneScoped;
 
 	using namespace ImGui;
 	
@@ -207,7 +207,7 @@ void CanvasSystem::MenuBar() {
 }
 
 inline void EntitiesTab(EntityAdmin* admin, float fontsize){
-	
+	ZoneScoped;
 
 	using namespace ImGui;
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ColToVec4(Color(25, 25, 25)));
@@ -568,7 +568,7 @@ inline void EntitiesTab(EntityAdmin* admin, float fontsize){
 }
 
 inline void CreateTab(EntityAdmin* admin, float fontsize){
-	
+	ZoneScoped;
 
 	
 	using namespace ImGui;
@@ -778,7 +778,7 @@ inline void CreateTab(EntityAdmin* admin, float fontsize){
 }
 
 void CanvasSystem::DebugTools() {
-	
+	ZoneScoped;
 
 	using namespace ImGui;
 	
@@ -844,7 +844,7 @@ void CanvasSystem::DebugTools() {
 }
 
 void CanvasSystem::DebugBar() {
-	
+	ZoneScoped;
 
 	using namespace ImGui;
 	
@@ -1100,6 +1100,7 @@ void CanvasSystem::DebugBar() {
 
 //sort of sandbox for drawing ImGui stuff over the entire screen
 void CanvasSystem::DebugLayer() {
+	ZoneScoped;
 
 
 	ImGui::SetNextWindowSize(ImVec2(DengWindow->width, DengWindow->height));
@@ -1254,7 +1255,7 @@ void CanvasSystem::DebugLayer() {
 }
 
 void CanvasSystem::DrawUI(void) {
-	
+	ZoneScoped;
 
 	if(admin->state == GameState::PLAY){
 		

@@ -54,6 +54,8 @@ inline void Time::Init(float fixedUpdatesPerSecond){
 }
 
 inline void Time::Update(){
+	ZoneScoped;
+
 	tp2 = std::chrono::system_clock::now();
 	std::chrono::duration<float> elapsedTime = tp2 - tp1;
 	tp1 = tp2;

@@ -2,6 +2,8 @@
 #ifndef DESHI_DEFINES_H
 #define DESHI_DEFINES_H
 
+#include "Tracy.hpp"
+
 //math constants
 #define M_PI         3.14159265359f
 #define M_E          2.71828182846f

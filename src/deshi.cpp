@@ -186,8 +186,11 @@ struct DeshiEngine {
 		
 		//start main loop
 		while (!glfwWindowShouldClose(window.window) && !window.closeWindow) {
+			ZoneScoped;
+
 			glfwPollEvents();
 			Update();
+			FrameMark;
 		}
 		
 		//admin.Save();

@@ -6,6 +6,7 @@
 #include "../Transform.h"
 
 void WorldSystem::Update() {
+	ZoneScoped;
 	//deletion buffer
 	for(Entity* entity : deletionBuffer) {
 		admin->entities.erase(admin->entities.begin()+entity->id);

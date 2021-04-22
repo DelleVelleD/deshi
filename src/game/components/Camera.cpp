@@ -127,6 +127,8 @@ std::string Camera::str(){
 }
 
 void Camera::Update() {
+	ZoneScoped;
+
 	if(freeCamera){
 		Window* window = DengWindow;
 		Renderer* renderer = DengRenderer;
@@ -139,9 +141,6 @@ void Camera::Update() {
 		forward = (Vector3::FORWARD * Matrix4::RotationMatrix(rotation)).normalized();
 		right = Vector3::UP.cross(forward).normalized();
 		up = right.cross(forward).normalized();
-		
-		
-		
 		
 		target = position + forward;
 		

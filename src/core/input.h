@@ -85,6 +85,8 @@ struct Input{
 	
 	//caches values so they are consistent thru the frame
 	void Update(){
+		ZoneScoped;
+
 		memcpy(&oldKeyState, &newKeyState, sizeof(bool) * MAX_KEYBOARD_KEYS);
 		memcpy(&newKeyState, &realKeyState, sizeof(bool) * MAX_KEYBOARD_KEYS);
 		//mouseX = realMouseX; mouseY = realMouseY; //NOTE this doesnt work, idk why

@@ -235,6 +235,8 @@ int Console::TextEditCallbackStub(ImGuiInputTextCallbackData* data) {
 
 
 void Console::DrawConsole() {
+	ZoneScoped;
+
 	ImGuiStyle& style = ImGui::GetStyle();
 	ImGuiIO& io = ImGui::GetIO();
 	
@@ -1433,6 +1435,8 @@ void Console::Init() {
 }
 
 void Console::Update() {
+	ZoneScoped;
+
 	if (dispcon) {
 		DrawConsole();
 		IMGUI_KEY_CAPTURE = true;

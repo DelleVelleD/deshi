@@ -98,6 +98,8 @@ void EntityAdmin::Cleanup() {
 }
 
 void UpdateLayer(ContainerManager<Component*> cl) {
+	ZoneScoped;
+
 	for (int i = 0; i < cl.size(); i++) {
 		if (cl[i].test()) {
 			cl[i].value->Update();
@@ -106,6 +108,8 @@ void UpdateLayer(ContainerManager<Component*> cl) {
 }
 
 void EntityAdmin::Update() {
+	ZoneScoped;
+
 	if(!skip) controller.Update();
 	if(!skip) mainCamera->Update();
 	
@@ -129,6 +133,10 @@ void EntityAdmin::Update() {
 	if (!skip && !pause_last && !paused)  { UpdateLayer(freeCompLayers[ComponentLayer_LAST]); }
 	DengTime->lastLyrTime =   TIMER_END(t_a);
 	
+	if (DengTime->physSysTime > 5000) {
+		pause_phys = true;
+		ERROR("Physics system took longer than 5 seconds to run, pausing.");
+	}
 	DengTime->paused = paused;
 	DengTime->phys_pause = pause_phys;
 	skip = false;

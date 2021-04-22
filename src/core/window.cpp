@@ -201,6 +201,8 @@ void Window::Init(Input* input, i32 width, i32 height, i32 x, i32 y, DisplayMode
 }//Init
 
 void Window::Update() {
+	ZoneScoped;
+
 	int xpos, ypos;
 	glfwGetWindowPos(window, &xpos, &ypos);
 	x = xpos; y = ypos;

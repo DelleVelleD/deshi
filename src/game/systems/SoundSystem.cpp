@@ -247,6 +247,8 @@ void SoundSystem::Init(EntityAdmin* admin) {
 }
 
 void SoundSystem::Update() {
+	ZoneScoped;
+
 	Camera* c = admin->mainCamera;
 	
 	Vector3 ld = c->forward;
