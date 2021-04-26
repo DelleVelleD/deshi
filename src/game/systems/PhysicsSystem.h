@@ -20,7 +20,7 @@ struct PhysicsSystem : public System {
 	float frictionAir = 0.01f; //TODO(delle,Ph) this should depend on object shape
 	
 	float maxVelocity    = 100.f;
-	float minVelocity    = 0.15f;
+	float minVelocity    = 0.005f;
 	float maxRotVelocity = 360.f; //per axis in degrees
 	float minRotVelocity = 1.f;
 	

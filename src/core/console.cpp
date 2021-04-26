@@ -11,6 +11,8 @@
 #include "../game/components/Collider.h"
 #include "../game/components/AudioSource.h"
 #include "../game/components/MeshComp.h"
+#include "../game/components/Player.h"
+#include "../game/components/Movement.h"
 #include "../scene/Scene.h"
 #include "../EntityAdmin.h"
 
@@ -504,6 +506,81 @@ COMMANDFUNC(redo){
 	admin->undoManager.Redo(); return "";
 }
 
+COMMANDFUNC(add_player) {
+	if (args.size() > 0) {
+		std::cmatch m;
+		Vector3 position{}, rotation{}, scale = { 1.f, 1.f, 1.f };
+		float mass = 1.f;
+		float elasticity = 0;
+		bool staticc = true;
+		ColliderType ctype;
+
+		//check for optional params after the first arg
+		for (auto s = args.begin() + 1; s != args.end(); ++s) {
+			if (std::regex_match(*s, RegPosParam)) { // -pos=(1,2,3)
+				std::regex_search(s->c_str(), m, VecNumMatch);
+				position = Vector3(std::stof(m[1]), std::stof(m[2]), std::stof(m[3]));
+			}
+			else if (std::regex_match(*s, RegRotParam)) { //-rot=(1.1,2,3)
+				std::regex_search(s->c_str(), m, VecNumMatch);
+				rotation = Vector3(std::stof(m[1]), std::stof(m[2]), std::stof(m[3]));
+			}
+			else if (std::regex_match(*s, RegScaleParam)) { //-scale=(0,1,0)
+				std::regex_search(s->c_str(), m, VecNumMatch);
+				scale = Vector3(std::stof(m[1]), std::stof(m[2]), std::stof(m[3]));
+			}
+			else if (std::regex_search(s->c_str(), m, StringRegex("collider"))) {
+				if (m[1] == "aabb") ctype = ColliderType_AABB;
+				else if (m[1] == "sphere") ctype = ColliderType_Sphere;
+				else if (m[1] == "landscape") ctype = ColliderType_Landscape;
+				else if (m[1] == "box") ctype = ColliderType_Box;
+			}
+			else if (std::regex_search(s->c_str(), m, FloatRegex("mass"))) {
+				if (std::stof(m[1]) < 0) return "[c:red]Mass must be greater than 0[c]";
+				mass = std::stof(m[1]);
+			}
+			else if (std::regex_search(s->c_str(), m, BoolRegex("static"))) {
+				if (m[1] == "0" || m[1] == "false") staticc = false;
+			}
+			else if (std::regex_search(s->c_str(), m, FloatRegex("elasticity"))) {
+				elasticity = std::stof(m[1]);
+			}
+			else {
+				return "[c:red]Invalid parameter: " + *s + "[c]";
+			}
+		}
+
+		//cut off the .obj extension for entity name
+		char name[64];
+		cpystr(name, args[0].substr(0, args[0].size() - 4).c_str(), 63);
+
+		//create the mesh
+		u32 id = DengRenderer->CreateMesh(&admin->scene, args[0].c_str());
+		Mesh* mesh = DengRenderer->GetMeshPtr(id);
+
+		//collider
+		Collider* col = nullptr;
+		switch (ctype) {
+		case ColliderType_AABB: col = new AABBCollider(mesh, 1); break;
+		case ColliderType_Sphere: col = new SphereCollider(1, 1); break;
+		case ColliderType_Landscape: col = new LandscapeCollider(mesh);
+		case ColliderType_Box: col = new BoxCollider(Vector3(1, 1, 1), 1);
+		}
+
+		MeshComp* mc = new MeshComp(mesh, id);
+		Physics* p = new Physics(position, rotation, Vector3::ZERO, Vector3::ZERO,
+			Vector3::ZERO, Vector3::ZERO, elasticity, mass, staticc);
+		AudioSource* s = new AudioSource("data/sounds/Kick.wav", p);
+		Movement* mov = new Movement(p);
+		Player* pl = new Player(mov);
+		admin->player = admin->world->CreateEntityNow(admin, { mc, p, s, col, mov, pl },
+			name, Transform(position, rotation, scale));
+		admin->controller.playermove = mov;
+		return TOSTRING("Added player.");
+	}
+	return "load_obj <model.obj:String> -pos=(x,y,z) -rot=(x,y,z) -scale=(x,y,z)";
+}
+
 void Console::AddRandomCommands(){
 	//TODO(sushi,Cmd) reimplement this at some point
 	//commands["debug_global"] = new Command([](EntityAdmin* admin, std::vector<std::string> args) -> std::string {
@@ -524,6 +601,7 @@ void Console::AddRandomCommands(){
 	ADDCOMMAND(time_game, "Logs the game times");
 	ADDCOMMAND(undo, "Undos previous level editor action");
 	ADDCOMMAND(redo, "Redos last undone level editor action");
+	ADDCOMMAND(add_player, "Adds a player to the world.");
 }
 
 ////////////////////////////////////
@@ -766,6 +844,7 @@ void Console::AddRenderCommands() {
 							std::cmatch m;
 							Vector3 position{}, rotation{}, scale = { 1.f, 1.f, 1.f };
 							float mass = 1.f;
+							float elasticity = 0;
 							bool staticc = true;
 							ColliderType ctype;
 							
@@ -796,6 +875,9 @@ void Console::AddRenderCommands() {
 								else if (std::regex_search(s->c_str(), m, BoolRegex("static"))) {
 									if (m[1] == "0" || m[1] == "false") staticc = false;
 								}
+								else if (std::regex_search(s->c_str(), m, FloatRegex("elasticity"))) {
+									elasticity = std::stof(m[1]);
+								}
 								else {
 									return "[c:red]Invalid parameter: " + *s + "[c]";
 								}
@@ -820,9 +902,9 @@ void Console::AddRenderCommands() {
 							
 							MeshComp* mc = new MeshComp(mesh, id);
 							Physics* p = new Physics(position, rotation, Vector3::ZERO, Vector3::ZERO, 
-													 Vector3::ZERO, Vector3::ZERO, .5f, mass, staticc);
+													 Vector3::ZERO, Vector3::ZERO, elasticity, mass, staticc);
 							AudioSource* s = new AudioSource("data/sounds/Kick.wav", p);
-							admin->world->CreateEntity(admin, { mc, p, s, col }, 
+							admin->world->CreateEntity(admin, { mc, p, s, col}, 
 													   name, Transform(position, rotation, scale));
 							
 							return TOSTRING("Loaded mesh ", args[0], " to ID: ", id);

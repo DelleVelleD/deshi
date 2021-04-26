@@ -14,6 +14,8 @@ if you feel they would handle the problem better. It should generally be you tho
 
 Major Ungrouped TODOs
 ---------------------
+make it so the play state starts when you go from EDITOR to PLAY or PLAY_DEBUG
+	like it is in Unreal, eg. everything resets to some start position when you stop playing
 add shaders: PBR (4textures)
 settings file(s) [keybinds, video, audio, etc]
 create a demo level
@@ -38,6 +40,8 @@ begin reimplementing sound system and maybe rethink its design a bit
 
 Render TODOs
 ------------
+get debugPrintf extension to work
+	you can test it through PHONG shader for now
 redo MeshVk so its only child meshes
 add lighting and shadows
 add 2D shader and interface functions
@@ -54,6 +58,7 @@ find a way to forward declare vulkan stuff and move the include to the cpp
 
 Level Editor TODOs
 ------------
+add transfering the player pointer between entities that have an actor comp
 orbitting camera for rotating around objects
 context menu when right clicking on an object 
 scaling objects

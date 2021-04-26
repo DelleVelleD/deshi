@@ -5,6 +5,21 @@
 #include "Component.h"
 #include "../../math/Vector.h"
 
+
+//only used for 2D currently
+struct Physics;
+struct Manifold {
+	Physics* a = nullptr;
+	Physics* b = nullptr;
+
+	int refID = 0;
+	Vector2 colpoints[2];
+	float depth[2];
+	int nColPoints = 0;
+
+	Vector2 norm;
+};
+
 struct Physics : public Component {
 	Vector3 position;
 	Vector3 rotation;

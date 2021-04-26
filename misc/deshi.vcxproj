@@ -197,7 +197,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\src\tracy\Tracy.hpp" />
     <ClInclude Include="..\src\core.h" />
     <ClInclude Include="..\src\core\assets.h" />
     <ClInclude Include="..\src\core\console.h" />
@@ -230,8 +229,10 @@
     <ClInclude Include="..\src\game\components\Component.h" />
     <ClInclude Include="..\src\game\components\Light.h" />
     <ClInclude Include="..\src\game\components\MeshComp.h" />
+    <ClInclude Include="..\src\game\components\Movement.h" />
     <ClInclude Include="..\src\game\components\Orb.h" />
     <ClInclude Include="..\src\game\components\Physics.h" />
+    <ClInclude Include="..\src\game\components\Player.h" />
     <ClInclude Include="..\src\game\Controller.h" />
     <ClInclude Include="..\src\game\Keybinds.h" />
     <ClInclude Include="..\src\game\systems\CanvasSystem.h" />
@@ -297,7 +298,6 @@
     <None Include="build.bat" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\src\tracy\TracyClient.cpp" />
     <ClCompile Include="..\src\core\assets.cpp" />
     <ClCompile Include="..\src\core\console.cpp" />
     <ClCompile Include="..\src\core\deshi_imgui_vulkan.cpp" />
@@ -320,8 +320,10 @@
     <ClCompile Include="..\src\game\components\Component.cpp" />
     <ClCompile Include="..\src\game\components\Light.cpp" />
     <ClCompile Include="..\src\game\components\MeshComp.cpp" />
+    <ClCompile Include="..\src\game\components\Movement.cpp" />
     <ClCompile Include="..\src\game\components\Orb.cpp" />
     <ClCompile Include="..\src\game\components\Physics.cpp" />
+    <ClCompile Include="..\src\game\components\Player.cpp" />
     <ClCompile Include="..\src\game\Controller.cpp" />
     <ClCompile Include="..\src\game\Keybinds.cpp" />
     <ClCompile Include="..\src\game\systems\CanvasSystem.cpp" />

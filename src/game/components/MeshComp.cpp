@@ -4,6 +4,8 @@
 #include "../../scene/Model.h"
 #include "../../scene/Scene.h"
 
+#include "../systems/CanvasSystem.h"
+
 #include "../../EntityAdmin.h"
 
 MeshComp::MeshComp() {
@@ -47,6 +49,11 @@ void MeshComp::ToggleVisibility() {
 	DengRenderer->UpdateMeshVisibility(meshID, mesh_visible);
 }
 
+void MeshComp::Visible(bool visible) {
+	mesh_visible = visible;
+	DengRenderer->UpdateMeshVisibility(meshID, mesh_visible);
+}
+
 void MeshComp::ReceiveEvent(Event event) {
 	switch (event) {
 		case TEST_EVENT:
@@ -78,6 +85,23 @@ void MeshComp::UpdateMeshTransform(Vector3 position, Vector3 rotation, Vector3 s
 void MeshComp::Update() {
 	ASSERT(mesh->vertexCount, "Mesh has no vertices");
 	
+
+	ImGui::BeginDebugLayer();
+
+	Color c1 = Color(15, 30, 50) * 3;
+	Color c2 = Color(50, 30, 15) * 3;
+
+	int i = 0;
+	for (auto t : mesh->triangles) {
+		ImGui::DebugDrawLine3(t->midpoint(), t->nbr[0]->midpoint(), g_admin->mainCamera, DengWindow->dimensions, (i % 2 == 0) ? c1 : c2);
+		ImGui::DebugDrawLine3(t->midpoint(), t->nbr[1]->midpoint(), g_admin->mainCamera, DengWindow->dimensions, (i % 2 == 0) ? c1 : c2);
+		ImGui::DebugDrawLine3(t->midpoint(), t->nbr[2]->midpoint(), g_admin->mainCamera, DengWindow->dimensions, (i % 2 == 0) ? c1 : c2);
+		i++;
+	}
+
+
+	ImGui::EndDebugLayer();
+
 	//update mesh's transform with entities tranform
 	if(ENTITY_CONTROL) DengRenderer->UpdateMeshMatrix(meshID, entity->transform.TransformMatrix());
 }

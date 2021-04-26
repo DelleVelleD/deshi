@@ -8,6 +8,8 @@
 #include "../components/Collider.h"
 #include "../components/AudioSource.h"
 
+#include "CanvasSystem.h"
+
 struct PhysicsTuple { 
 	Transform* transform = nullptr; 
 	Physics*   physics   = nullptr; 
@@ -51,7 +53,7 @@ inline void PhysicsTick(PhysicsTuple& t, PhysicsSystem* ps, Time* time) {
 	t.physics->inputVector = Vector3::ZERO;
 	
 	//add gravity 
-	t.physics->AddForce(nullptr, Vector3(0, ps->gravity, 0));
+	t.physics->acceleration += Vector3(0, ps->gravity, 0);
 	
 	//add temp air friction force
 	t.physics->AddFrictionForce(nullptr, ps->frictionAir);
@@ -61,8 +63,8 @@ inline void PhysicsTick(PhysicsTuple& t, PhysicsSystem* ps, Time* time) {
 	for(auto& f : t.physics->forces) {
 		netForce += f;
 	}
-	t.physics->acceleration = netForce / t.physics->mass * 50;
-	
+	t.physics->acceleration += netForce / t.physics->mass;
+
 	//update linear movement and clamp it to min/max velocity
 	if (!t.physics->isStatic) {
 		t.physics->velocity += t.physics->acceleration * time->fixedDeltaTime;
@@ -77,7 +79,6 @@ inline void PhysicsTick(PhysicsTuple& t, PhysicsSystem* ps, Time* time) {
 		}
 		t.physics->position += t.physics->velocity * time->fixedDeltaTime;
 	}
-	
 	
 	//// rotation ////
 	
@@ -116,6 +117,16 @@ inline void PhysicsTick(PhysicsTuple& t, PhysicsSystem* ps, Time* time) {
 	
 	//reset accelerations
 	t.physics->forces.clear();
+
+	//ImGui::DebugDrawText3(t.physics->position.str().c_str(), t.physics->position, ad->mainCamera, DengWindow->dimensions, Color(180, 150, 130));
+	//ImGui::DebugDrawText3(t.physics->velocity.str().c_str(), t.physics->position, ad->mainCamera, DengWindow->dimensions, Color(130, 150, 180), Vector2(0, 20));
+	//ImGui::DebugDrawText3(t.physics->acceleration.str().c_str(), t.physics->position, ad->mainCamera, DengWindow->dimensions, Color(150, 130, 180), Vector2(0, 40));
+
+	if (!strcmp("player", t.physics->entity->name)) {
+		int i = 0;
+	}
+
+	t.physics->acceleration = Vector3::ZERO;
 }
 
 /////////////////////
@@ -129,12 +140,12 @@ Matrix4 LocalToWorldInertiaTensor(Physics* physics, Matrix3 inertiaTensor) {
 
 inline void AABBAABBCollision(Physics* obj1, AABBCollider* obj1Col, Physics* obj2, AABBCollider* obj2Col) {
 	ZoneScoped;
+	vec3 min1 = obj1->position - (obj1Col->halfDims * obj1->entity->transform.scale);
+	vec3 max1 = obj1->position + (obj1Col->halfDims * obj1->entity->transform.scale);
+	vec3 min2 = obj2->position - (obj2Col->halfDims * obj2->entity->transform.scale);
+	vec3 max2 = obj2->position + (obj2Col->halfDims * obj2->entity->transform.scale);
 	
-	//calculate min and max values over each axis
-	vec3 max1 = obj1->position + obj1Col->halfDims;
-	vec3 min1 = obj1->position - obj1Col->halfDims;
-	vec3 max2 = obj2->position + obj2Col->halfDims;
-	vec3 min2 = obj2->position - obj2Col->halfDims;
+
 	
 	if (//check if overlapping
 		(min1.x <= max2.x && max1.x >= min2.x) &&
@@ -152,34 +163,41 @@ inline void AABBAABBCollision(Physics* obj1, AABBCollider* obj1Col, Physics* obj
 		if (max1.z < max2.z) zover = max1.z - min2.z;
 		else                 zover = max2.z - min1.z;
 		
-		//TODO( sushi,So) find a nicer way to determine how loud a collision sound is	 
-		//obj1->entity->GetComponent<AudioSource>()->RequestPlay(obj1->velocity.mag() + obj2->velocity.mag());
-		
-		bool xf = false; bool yf = false; bool zf = false;
-		
 		//static resolution
+		Vector3 norm;
 		if (xover < yover && xover < zover) {
 			if(!obj1->isStatic) obj1->position.x += xover / 2;
 			if(!obj2->isStatic) obj2->position.x -= xover / 2;
-			xf = true;
+			norm = Vector3::LEFT;
 		}	
 		else if (yover < xover && yover < zover) {
 			if(!obj1->isStatic) obj1->position.y += yover / 2;
 			if(!obj2->isStatic) obj2->position.y -= yover / 2;
-			yf = true;
+			norm = Vector3::DOWN;
 		}
 		else if (zover < yover && zover < xover) {
 			if(!obj1->isStatic) obj1->position.z += zover / 2;
 			if(!obj2->isStatic) obj2->position.z -= zover / 2;
-			zf = true;
+			norm = Vector3::BACK;
 		}
 		
 		//dynamic resolution
-		//TODO(sushi, Ph) finish implementing AABB dynamic collision
-		//get relative velocity
-		Vector3 relvel = obj2->velocity - obj1->velocity;
-		
-		
+		Vector2 rv = obj2->velocity - obj1->velocity;
+
+		//if (obj2->isStatic) rv = obj1->velocity;
+
+		float vAlongNorm = rv.dot(norm);
+
+		if (vAlongNorm < 0) {
+			//TODO(sushi, Ph) do better elasticity later
+			float j = -(1 + (obj1->elasticity + obj2->elasticity) / 2) * vAlongNorm;
+			j /= 1 / obj1->mass + 1 / obj2->mass;
+
+			Vector2 impulse = j * norm;
+			if (!obj1->isStatic) obj1->velocity -= impulse / obj1->mass;
+			if (!obj2->isStatic) obj2->velocity += impulse / obj2->mass;
+
+		}
 	}
 	
 }
@@ -187,7 +205,7 @@ inline void AABBAABBCollision(Physics* obj1, AABBCollider* obj1Col, Physics* obj
 inline void AABBSphereCollision(Physics* aabb, AABBCollider* aabbCol, Physics* sphere, SphereCollider* sphereCol) {
 	ZoneScoped;
 	
-	Vector3 aabbPoint = Geometry::ClosestPointOnAABB(aabb->position, aabbCol->halfDims, sphere->position);
+	Vector3 aabbPoint = Geometry::ClosestPointOnAABB(aabb->position, (aabbCol->halfDims * aabb->entity->transform.scale), sphere->position);
 	Vector3 vectorBetween = aabbPoint - sphere->position; //sphere towards aabb
 	float distanceBetween = vectorBetween.mag();
 	if(distanceBetween < sphereCol->radius) {
@@ -203,7 +221,7 @@ inline void AABBSphereCollision(Physics* aabb, AABBCollider* aabbCol, Physics* s
 			float overlap = .5f * (sphereCol->radius - distanceBetween);
 			Vector3 normal = -vectorBetween.normalized();
 			vectorBetween = -normal * overlap;
-			if(aabb->isStatic && aabb->isStatic){
+			if(aabb->isStatic && sphere->isStatic){
 				//do nothing b/c neither can move
 			}else if(aabb->isStatic){
 				sphere->position -= vectorBetween;
@@ -229,7 +247,7 @@ inline void AABBSphereCollision(Physics* aabb, AABBCollider* aabbCol, Physics* s
 			float inverseMassB = 1.f / aabb->mass; 
 			scalar += inverseMassB + aabbAngularVelocityChange.cross(rb).dot(normal);
 			
-			float coefRest = (aabb->elasticity + sphere->elasticity); //this is completely unfounded is science :)
+			float coefRest = (aabb->elasticity + sphere->elasticity) / 2; //this is completely unfounded is science :)
 			float impulseMod = (coefRest + 1) * (sphere->velocity - aabb->velocity).mag(); //this too :)
 			Vector3 impulse = normal * impulseMod;
 			aabb->AddImpulse(sphere, -impulse);
@@ -256,7 +274,7 @@ inline void SphereSphereCollision(Physics* s1, SphereCollider* sc1, Physics* s2,
 		if (!s2->isStatic) s2->position += s1t2.normalized() * overlap;
 
 		//dynamic resolution
-		//from https://www.gamasutra.com/view/feature/131424/pool_hall_lessons_fast_accurate_.php?print=1
+		//from https://www.gamasutra.com/view/feature./131424/pool_hall_lessons_fast_accurate_.php?print=1
 		Vector3 n = s1->position - s2->position;
 		n.normalize();
 
@@ -282,6 +300,10 @@ inline void SphereBoxCollision(Physics* sphere, SphereCollider* sphereCol, Physi
 
 inline void BoxBoxCollision(Physics* box, BoxCollider* boxCol, Physics* other, BoxCollider* otherCol) {
 	ERROR("Box-Box collision not implemented in PhysicsSystem.cpp");
+}
+
+inline void Solve2DManifolds() {
+
 }
 
 //NOTE make sure you are using the right physics component, because the collision 
@@ -339,6 +361,10 @@ inline void CollisionTick(std::vector<PhysicsTuple>& tuples, PhysicsTuple& t){
 	}
 }
 
+
+
+
+
 //////////////////////////
 //// system functions ////
 //////////////////////////
@@ -347,17 +373,23 @@ void PhysicsSystem::Update() {
 	ZoneScoped;
 
 	std::vector<PhysicsTuple> tuples = GetPhysicsTuples(admin);
-	
+
 	//update physics extra times per frame if frame time delta is larger than physics time delta
+	TIMER_START(physLocalTime);
 	while(DengTime->fixedAccumulator >= DengTime->fixedDeltaTime) {
 		for(auto& t : tuples) {
+			if (TIMER_END(physLocalTime) > 5000) {
+				admin->pause_phys = true;
+				ERROR("Physics system took longer than 5 seconds, pausing.");
+				goto physend;
+			}
 			PhysicsTick(t, this, DengTime);
 			CollisionTick(tuples, t);
 		}
 		DengTime->fixedAccumulator -= DengTime->fixedDeltaTime;
 		DengTime->fixedTotalTime += DengTime->fixedDeltaTime;
 	}
-	
+	physend:
 	//interpolate between new physics position and old transform position by the leftover time
 	float alpha = DengTime->fixedAccumulator / DengTime->fixedDeltaTime;
 	for(auto& t : tuples) {
@@ -370,4 +402,5 @@ void PhysicsSystem::Update() {
 		//t.transform->rotation *= Matrix4::RotationMatrixAroundPoint(t.transform->position, t.transform->rotation*(1.f - alpha) + t.physics->rotation*alpha);
 		//TODO(delle,Ph) look into better rotational interpolation once we switch to quaternions
 	}
+
 }

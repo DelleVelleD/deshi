@@ -57,6 +57,82 @@ void Mesh::SetName(const char* name){
 	cpystr(this->name, name, 63);
 }
 
+inline Vector3 VertToVec3(const Vertex& v){
+	return Vector3(v.pos.x, v.pos.y, v.pos.z);
+}
+
+std::vector<Triangle*> FindTriangleNeighbors(Mesh* m) {
+	std::vector<Triangle*> triangles;
+
+	//gather all triangles out of batch arrays
+	for (auto& b : m->batchArray) {
+		for (int i = 0; i < b.indexArray.size(); i += 3) {
+			Triangle* t = new Triangle(); 
+			t->p[0] = VertToVec3(b.vertexArray[b.indexArray[i]]);
+			t->p[1] = VertToVec3(b.vertexArray[b.indexArray[i + 1]]);
+			t->p[2] = VertToVec3(b.vertexArray[b.indexArray[i + 2]]);
+			triangles.push_back(t);
+		}
+	}
+
+	auto eqtoany = [](std::vector<Vector3> v, Vector3 t) {
+		for (Vector3 a : v) if (t == a) return true;
+		return false;
+	};
+
+	//find and mark neighbors
+	Triangle* ti;
+	Triangle* to;
+	for (int i = 0; i < triangles.size(); i++) {
+		ti = triangles[i];
+
+		PRINTLN("test iterate~~~~ " << i);
+
+		if (!(ti->nbr[0] && ti->nbr[1] && ti->nbr[2])) {
+			std::vector<Vector3> tip{ ti->p[0], ti->p[1], ti->p[2] };
+
+			for (int o = 0; o < triangles.size(); o++) {
+				if (ti->nbr[0] && ti->nbr[1] && ti->nbr[2]) break;
+				if (o != i) {
+					to = triangles[o];
+					if (to != ti->nbr[0] && to != ti->nbr[1] && to != ti->nbr[2]) {
+						if (eqtoany(tip, to->p[0]) && eqtoany(tip, to->p[1]) ||
+							eqtoany(tip, to->p[1]) && eqtoany(tip, to->p[2]) ||
+							eqtoany(tip, to->p[2]) && eqtoany(tip, to->p[0])) {
+
+							auto setnbr = [&](int index) {
+								ti->nbr[index] = to;
+								if (!to->nbr[0]) to->nbr[0] = ti;
+								else if (!to->nbr[1]) to->nbr[1] = ti;
+								else if (!to->nbr[2]) to->nbr[2] = ti;
+								else ASSERT(false, "Triangle found too many neighbors.");
+							};
+
+							if      (!ti->nbr[0]) setnbr(0);
+							else if (!ti->nbr[1]) setnbr(1);
+							else if (!ti->nbr[2]) setnbr(2);
+
+							int breakhere = 0;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//temp debug assert
+	if (triangles.size() > 4) {
+		for (Triangle* t : triangles) {
+			ASSERT(t->nbr[0] && t->nbr[1] && t->nbr[2], "triangle without 3 neighbors found");
+		}
+	}
+
+	//m->triangles = triangles;
+
+	return triangles;
+
+}
+
 //https://github.com/tinyobjloader/tinyobjloader
 Mesh Mesh::CreateMeshFromOBJ(std::string filename){
 	Mesh mesh; mesh.SetName(filename.c_str());
@@ -127,7 +203,7 @@ Mesh Mesh::CreateMeshFromOBJ(std::string filename){
 		totalTextureCount += batch.textureCount;
 		
 		std::unordered_map<Vertex, u32> uniqueVertices{};
-		
+
 		//fill batch vertex and index arrays
 		size_t faceCount = shape.mesh.num_face_vertices.size();
 		batch.vertexArray.reserve(faceCount/3);
@@ -152,9 +228,12 @@ Mesh Mesh::CreateMeshFromOBJ(std::string filename){
 				vertex.color.z = attrib.colors[3 * idx.vertex_index + 2];
 			}
 			
-			if(uniqueVertices.count(vertex) == 0){
+			if (uniqueVertices.count(vertex) == 0) {
 				uniqueVertices[vertex] = u32(batch.vertexArray.size());
 				batch.vertexArray.push_back(vertex);
+			}
+			else {
+				batch.vertexArray[uniqueVertices[vertex]].normal = (vertex.normal + batch.vertexArray[uniqueVertices[vertex]].normal).normalized();
 			}
 			batch.indexArray.push_back(uniqueVertices[vertex]);
 		}
@@ -173,6 +252,7 @@ Mesh Mesh::CreateMeshFromOBJ(std::string filename){
 	mesh.indexCount = totalIndexCount;
 	mesh.textureCount = totalTextureCount;
 	mesh.batchCount = mesh.batchArray.size();
+	mesh.triangles = FindTriangleNeighbors(&mesh);
 	return mesh;
 }
 

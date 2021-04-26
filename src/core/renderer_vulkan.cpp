@@ -231,7 +231,6 @@ Render() {
 	//iterate the frame index
 	frameIndex = (frameIndex + 1) % MAX_FRAMES; //loops back to zero after reaching max_frames
 	ASSERTVK(vkQueueWaitIdle(graphicsQueue), "graphics queue failed to wait");
-	
 	//update stats
 	stats.drawnTriangles += stats.drawnIndices / 3;
 	stats.totalVertices += u32(vertexBuffer.size());

@@ -3,6 +3,16 @@
 
 namespace Geometry {
 
+	//std::vector<Vector2> GenerateOutline(Mesh* m) {
+	//	std::vector<u32> indexArray;
+	//	for (auto& b : m->batchArray) {
+	//		for (int i = 0; i < b.indexArray.size(); i++) {
+	//			indexArray.push_back(b.indexArray[i]);
+	//		}
+	//	}
+	//}
+
+
 	Vector3 ClosestPointOnAABB(Vector3 center, Vector3 halfDims, Vector3 target) {
 		return Vector3(
 			fmaxf(center.x - halfDims.x, fminf(target.x, center.x + halfDims.x)),

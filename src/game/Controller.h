@@ -5,6 +5,7 @@
 #include "../utils/defines.h"
 
 struct EntityAdmin;
+struct Movement;
 
 enum MovementMode : u32 {
 	MOVEMENT_MODE_FLYING,
@@ -15,6 +16,7 @@ enum MovementMode : u32 {
 struct Controller{
 	EntityAdmin* admin;
 	MovementMode mode;
+	Movement* playermove;
 	bool noclip = true;
 	
 	float mouseSensitivity = 2.5f;

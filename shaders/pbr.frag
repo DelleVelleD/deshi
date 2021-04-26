@@ -21,11 +21,17 @@ layout(location = 7) in float height;
 
 layout(location = 0) out vec4 outColor;
 
-
+float interp(float a, float b, float t){
+	return (1 - t) * a + t * b;
+}
 
 void main() {
 	//TODO(delle,r) pbr shading, see pbrtexture in saschawillems' stuff
 	vec2 tc = inTexCoord;
+	vec4 fc = gl_FragCoord;
+
+	fc.x /= width;
+	fc.y /= height;
 
 	tc.y *= -1;
 	vec4 normal = texture(albedoSampler, tc);
@@ -37,6 +43,6 @@ void main() {
 					  clamp(dot(normalize(light - inPosition), -vec3(normal)), 0, 1), 1);
 	
 	
-	outColor = tex * lightcolor;// * color;// * color2;
+	outColor = tex;// * lightcolor;// * color;// * color2;
 
 }

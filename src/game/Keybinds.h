@@ -12,6 +12,13 @@ struct Keybinds{
 	Key::Key movementFlyingBack    = Key::S;
 	Key::Key movementFlyingRight   = Key::D;
 	Key::Key movementFlyingLeft    = Key::A;
+
+	//walking movement
+	Key::Key movementWalkingForward = Key::W;
+	Key::Key movementWalkingBackward = Key::S;
+	Key::Key movementWalkingRight = Key::D;
+	Key::Key movementWalkingLeft = Key::A;
+	Key::Key movementJump = Key::SPACE;
 	
 	//camera controls
 	Key::Key cameraRotateUp    = Key::UP;

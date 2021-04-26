@@ -1,0 +1,1 @@
+kronos_validation.printf_buffer_size = 2555

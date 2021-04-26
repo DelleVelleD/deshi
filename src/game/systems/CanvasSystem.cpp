@@ -88,9 +88,14 @@ namespace ImGui {
 	}
 	
 	void DebugDrawLine3(Vector3 pos1, Vector3 pos2, Camera* c, Vector2 windimen, Color color) {
-		Vector2 pos12 = Math::WorldToScreen2(pos1, c->projectionMatrix, c->viewMatrix, windimen);
-		Vector2 pos22 = Math::WorldToScreen2(pos2, c->projectionMatrix, c->viewMatrix, windimen);
-		ImGui::GetBackgroundDrawList()->AddLine(pos12.ToImVec2(), pos22.ToImVec2(), ImGui::GetColorU32(ColToVec4(color)));
+		Vector3 pos1n = Math::WorldToCamera3(pos1, c->viewMatrix);
+		Vector3 pos2n = Math::WorldToCamera3(pos2, c->viewMatrix);
+
+		if (Math::ClipLineToZPlanes(pos1n, pos2n, c)) {
+			ImGui::GetBackgroundDrawList()->AddLine(
+				Math::CameraToScreen2(pos1n, c->projectionMatrix, windimen).ToImVec2(), 
+				Math::CameraToScreen2(pos2n, c->projectionMatrix, windimen).ToImVec2(), ImGui::GetColorU32(ColToVec4(color)));
+		}
 	}
 	
 	void DebugDrawText(const char* text, Vector2 pos, Color color) {		
@@ -101,12 +106,73 @@ namespace ImGui {
 		ImGui::PopStyleColor();
 	}
 	
-	void DebugDrawText3(const char* text, Vector3 pos, Camera* c, Vector2 windimen, Color color) {
-		Vector2 pos2 = Math::WorldToScreen2(pos, c->projectionMatrix, c->viewMatrix, windimen);
-		ImGui::SetCursorPos(pos2.ToImVec2());
-		
-		ImGui::PushStyleColor(ImGuiCol_Text, ColToVec4(color));
-		ImGui::Text(text);
+	void DebugDrawText3(const char* text, Vector3 pos, Camera* c, Vector2 windimen, Color color, Vector2 twoDoffset) {
+		Vector3 posc = Math::WorldToCamera3(pos, c->viewMatrix);
+		if(Math::ClipLineToZPlanes(posc, posc, c)){
+			ImGui::SetCursorPos((Math::CameraToScreen2(posc, c->projectionMatrix, windimen) + twoDoffset).ToImVec2());
+			ImGui::PushStyleColor(ImGuiCol_Text, ColToVec4(color));
+			ImGui::Text(text);
+			ImGui::PopStyleColor();
+		}
+	}
+
+	void DebugDrawGraphFloat(Vector2 pos, float inval, float sizex, float sizey) {
+		//display in value
+		ImGui::SetCursorPos(ImVec2(pos.x, pos.y - 10));
+		ImGui::Text(TOSTRING(inval).c_str());
+
+		//how much data we store
+		static int prevstoresize = 100;
+		static int storesize = 100;
+
+		//how often we update
+		static int fupdate = 1;
+		static int frame_count = 0;
+
+		static float maxval = inval + 5;
+		static float minval = inval - 5;
+
+		//if (inval > maxval) maxval = inval;
+		//if (inval < minval) minval = inval;
+
+		if (inval > maxval || inval < minval) {
+			maxval = inval + 5;
+			minval = inval - 5;
+		}
+		//real values and printed values
+		static std::vector<float> values(storesize);
+		static std::vector<float> pvalues(storesize);
+
+		//if changing the amount of data we're storing we have to reverse
+		//each data set twice to ensure the data stays in the right place when we move it
+		if (prevstoresize != storesize) {
+			std::reverse(values.begin(), values.end());    values.resize(storesize);  std::reverse(values.begin(), values.end());
+			std::reverse(pvalues.begin(), pvalues.end());  pvalues.resize(storesize); std::reverse(pvalues.begin(), pvalues.end());
+			prevstoresize = storesize;
+		}
+
+		std::rotate(values.begin(), values.begin() + 1, values.end());
+
+		//update real set if we're not updating yet or update the graph if we are
+		if (frame_count < fupdate) {
+			values[values.size() - 1] = inval;
+			frame_count++;
+		}
+		else {
+			float avg = Math::average(values.begin(), values.end(), storesize);
+			std::rotate(pvalues.begin(), pvalues.begin() + 1, pvalues.end());
+			pvalues[pvalues.size() - 1] = std::floorf(avg);
+			
+			frame_count = 0;
+		}
+
+		ImGui::PushStyleColor(ImGuiCol_PlotLines, ColToVec4(Color(0, 255, 200, 255)));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ColToVec4(Color(20, 20, 20, 255)));
+
+		ImGui::SetCursorPos(pos.ToImVec2());
+		ImGui::PlotLines("", &pvalues[0], pvalues.size(), 0, 0, minval, maxval, ImVec2(sizex, sizey));
+
+		ImGui::PopStyleColor();
 		ImGui::PopStyleColor();
 	}
 }
@@ -554,6 +620,12 @@ inline void EntitiesTab(EntityAdmin* admin, float fontsize){
 				
 				SetPadding;
 				ImGui::InputFloat("gravity", &admin->physics->gravity);
+
+				SetPadding;
+				if (ImGui::InputFloat("tick rate", &DengTime->fixedTimeStep, ImGuiInputTextFlags_EnterReturnsTrue)) {
+					DengTime->fixedDeltaTime = 1 / DengTime->fixedTimeStep;
+				}
+				
 				
 				SetPadding;
 				ImGui::Text("#colliders: not implemented");

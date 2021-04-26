@@ -18,6 +18,7 @@ struct MeshComp : public Component {
 	MeshComp(Mesh* m, u32 meshID = 0, u32 instanceID = 0);
 	
 	void ToggleVisibility();
+	void Visible(bool visible);
 	void UpdateMeshTransform(Vector3 position, Vector3 rotation, Vector3 scale);
 	
 	void ChangeMaterialShader(u32 s);

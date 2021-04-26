@@ -104,7 +104,7 @@ struct Vertex {
 namespace std {
 	template<> struct hash<Vertex> {
 		size_t operator()(Vertex const& vertex) const {
-			return (((hash<Vector3>()(vertex.pos) ^ (hash<Vector2>()(vertex.uv) << 1)) >> 1) ^ (hash<Vector3>()(vertex.color) << 1) >> 1) ^ (hash<Vector3>()(vertex.normal) << 1);
+			return ((hash<Vector3>()(vertex.pos) ^ (hash<Vector2>()(vertex.uv) << 1)) >> 1) ^ (hash<Vector3>()(vertex.color) << 1);
 		}
 	};
 };
@@ -128,6 +128,20 @@ struct Batch {
 	void SetName(const char* name);
 };
 
+//primarily for caching triangles neighbors
+//TODO(sushi, Op) maybe cache what edge a triangle shares with each of its neighbors too?
+struct Triangle {
+	Vector3 p[3];
+	Triangle* nbr[3]{};
+
+	Vector3 midpoint() {
+		return Vector3(
+			(p[0].x + p[1].x + p[2].x) / 3,
+			(p[0].y + p[1].y + p[2].y) / 3,
+			(p[0].z + p[1].z + p[2].z) / 3);
+	}
+};
+
 struct Mesh {
 	char name[64];
 	
@@ -137,7 +151,8 @@ struct Mesh {
 	
 	u32 batchCount = 0;
 	std::vector<Batch> batchArray;
-	
+	std::vector<Triangle*> triangles;
+
 	Mesh() {}
 	Mesh(const char* name, std::vector<Batch> batchArray);
 	

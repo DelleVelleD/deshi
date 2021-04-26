@@ -532,12 +532,12 @@ namespace Math {
 		return Math::ProjMult(vertex.ToVector4(), viewMatrix.Inverse());
 	}
 	
-	static Vector3 CameraToScreen2(Vector3 csVertex, Matrix4 projectionMatrix, Vector2 screenDimensions) {
+	static Vector2 CameraToScreen2(Vector3 csVertex, Matrix4 projectionMatrix, Vector2 screenDimensions) {
 		Vector3 vm = Math::ProjMult(csVertex.ToVector4(), projectionMatrix).ToVector3();
 		vm.x += 1.0f; vm.y += 1.0f;
 		vm.x *= 0.5f * (float)screenDimensions.x;
 		vm.y *= 0.5f * (float)screenDimensions.y;
-		return vm;
+		return vm.ToVector2();
 	}
 	
 	static Vector3 CameraToScreen3(Vector3 csVertex, Matrix4 projectionMatrix, Vector2 screenDimensions) {

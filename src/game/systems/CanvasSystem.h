@@ -18,8 +18,8 @@ namespace ImGui {
 	void DebugDrawLine(Vector2 pos1, Vector2 pos2, Color color = Color::WHITE);
 	void DebugDrawLine3(Vector3 pos1, Vector3 pos2, Camera* c, Vector2 windimen, Color color = Color::WHITE);
 	void DebugDrawText(const char* text, Vector2 pos, Color color = Color::WHITE);
-	void DebugDrawText3(const char* text, Vector3 pos, Camera* c, Vector2 windimen, Color color = Color::WHITE);
-
+	void DebugDrawText3(const char* text, Vector3 pos, Camera* c, Vector2 windimen, Color color = Color::WHITE, Vector2 twoDoffset = Vector2::ZERO);
+	void DebugDrawGraphFloat(Vector2 pos, float inval, float sizex = 100, float sizey = 100);
 }
 
 struct CanvasSystem : public System {

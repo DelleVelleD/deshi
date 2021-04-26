@@ -47,6 +47,10 @@ struct WorldSystem : public System {
 	//returns the eventual position in the admin's entities array
 	u32 CreateEntity(EntityAdmin* admin, std::vector<Component*> components, const char* name = 0, Transform transform = Transform());
 	
+	//initializes an entity with a component vector and adds it to entities immedietly
+	//returns a pointer to the entitiy
+	Entity* CreateEntityNow(EntityAdmin* admin, std::vector<Component*> components, const char* name = 0, Transform transform = Transform());
+
 	//adds an already initialized entity to the creation buffer
 	//returns its place in the queue
 	void AddEntityToCreationBuffer(EntityAdmin* admin, Entity* entity);

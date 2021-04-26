@@ -190,7 +190,12 @@
     <ClInclude Include="..\src\game\Controller.h">
       <Filter>src\game</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\src\tracy\Tracy.hpp" />
+    <ClInclude Include="..\src\game\components\Movement.h">
+      <Filter>src\game\components\h</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\game\components\Player.h">
+      <Filter>src\game\components\h</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -452,7 +457,12 @@
     <ClCompile Include="..\src\game\systems\CanvasSystem.cpp">
       <Filter>src\game\systems\cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\src\tracy\TracyClient.cpp" />
+    <ClCompile Include="..\src\game\components\Movement.cpp">
+      <Filter>src\game\components\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\game\components\Player.cpp">
+      <Filter>src\game\components\cpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\cfg\keybinds.txt">

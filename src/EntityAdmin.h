@@ -29,8 +29,6 @@ enum struct GameState{
 	NONE, PLAY, PLAY_DEBUG, EDITOR, MENU
 };
 
-//the entity admin is fed down to all systems and components that it controls meaning that
-//the core will also be accessible in those places too.
 struct EntityAdmin {
 	GameState state = GameState::NONE;
 	
@@ -49,6 +47,7 @@ struct EntityAdmin {
 	Controller  controller;
 	UndoManager undoManager;
 	
+	Entity* player;
 	Camera* mainCamera;
 	
 	Entity* selectedEntity = 0;
