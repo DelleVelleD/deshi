@@ -132,7 +132,7 @@ if multiple errors are sent to the console before the user opens it, show a numb
 make binds and aliases check if one already exists for a key or a command. if a key already exists probably just overwrite it?
 implement filtering console buffer by function and file name (add __FILENAME__ and __FUNCTION__ or whatever it is to the defines)
 fix regex match variable to be smatch instead of cmatch, so we don't have to keep turning every string into a c string
-
+asda
 UI TODOs
 --------
 look into easier hover checking and input intercepting for imgui
