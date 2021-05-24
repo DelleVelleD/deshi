@@ -47,7 +47,6 @@ look into integrating TODOP with Discord
 begin reimplementing sound system and maybe rethink its design a bit
 replace std::pair with pair throughout the project
 move common things in the Component contructors to the parent constructor
-tsetr
 
 
 Render TODOs
